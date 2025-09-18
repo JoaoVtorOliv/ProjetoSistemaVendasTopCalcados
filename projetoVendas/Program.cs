@@ -846,7 +846,7 @@ namespace Listacomstruct
             // Chama a tela de login e armazena o usuário que efetuou login.
             Usuario? usuarioLogado = TelaDeLogin(listaDeUsuarios);
 
-            // O programa principal só executa se o login for bem-sucedido.
+            // O programa principal só executa se o login for bem sucedido.
             if (usuarioLogado.HasValue)
             {
                 string escolha;
