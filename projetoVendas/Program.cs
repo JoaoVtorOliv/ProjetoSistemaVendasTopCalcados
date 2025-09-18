@@ -145,7 +145,7 @@ namespace Listacomstruct
             Console.ForegroundColor = ConsoleColor.DarkYellow; // Muda a cor do texto.
             Console.WriteLine("╔══════════════════════════════════════════════════════════════════════════════╗");
             // Centraliza o título dentro da borda.
-            Console.WriteLine($"║{titulo.PadLeft((78 + titulo.Length) / 2).PadRight(78)                       }║");
+            Console.WriteLine($"║{titulo.PadLeft((78 + titulo.Length) / 2).PadRight(78)}║");
             Console.WriteLine("╚══════════════════════════════════════════════════════════════════════════════╝");
             Console.ResetColor(); // Restaura a cor padrão do texto.
             Console.WriteLine();
@@ -372,16 +372,6 @@ namespace Listacomstruct
             else if (op == "2") CadastrarAcessorio(la);
         }
 
-        // Menu para escolher o tipo de produto a ser vendido.
-        static void MenuVenda(List<Calcado> lc, List<Acessorio> la, List<Venda> lv, Usuario u)
-        {
-            ImprimirCabecalho("MENU DE VENDA");
-            Console.WriteLine("[1] Vender Calçado\n[2] Vender Acessório\n\n[0] Voltar");
-            string op = LerString("Escolha o tipo:");
-            if (op == "1") RealizarVendaCalcado(lc, lv, u);
-            else if (op == "2") RealizarVendaAcessorio(la, lv, u);
-        }
-
         // Menu para escolher qual tipo de produto editar.
         static void MenuEdicao(List<Calcado> lc, List<Acessorio> la)
         {
@@ -450,89 +440,118 @@ namespace Listacomstruct
             AguardarEnter();
         }
 
-        // Lógica para realizar a venda de um calçado.
-        static void RealizarVendaCalcado(List<Calcado> lc, List<Venda> lv, Usuario u)
+        // ===================================================================
+        // NOVA FUNÇÃO DE VENDA (Substitui a MenuVenda antiga)
+        // ===================================================================
+        static void MenuVenda(List<Calcado> lc, List<Acessorio> la, List<Venda> lv, Usuario u)
         {
-            ImprimirCabecalho("VENDA DE CALÇADO");
-            string nome = LerString("Nome do calçado:");
-            // Procura o índice do produto na lista, ignorando maiúsculas/minúsculas.
-            int index = lc.FindIndex(c => c.nome.Equals(nome, StringComparison.OrdinalIgnoreCase));
-
-            // Se o produto foi encontrado (índice diferente de -1).
-            if (index != -1)
+            // O loop continua para que o vendedor possa realizar múltiplas vendas sem voltar ao menu principal.
+            while (true)
             {
-                int quantidadeVendida = LerInteiro("Quantidade:");
-                var item = lc[index]; // Pega uma cópia do item para trabalhar.
+                ImprimirCabecalho("MENU DE VENDA - ESTOQUE DISPONÍVEL");
 
-                // Valida se a quantidade pedida é positiva e se há estoque suficiente.
-                if (quantidadeVendida > 0 && item.quant >= quantidadeVendida)
+                // 1. CRIA UMA LISTA UNIFICADA TEMPORÁRIA PARA EXIBIÇÃO
+                var itensParaVenda = new List<(int id, string nome, string tipo, float preco, int quant)>();
+                int contadorId = 1;
+
+                // Adiciona os calçados que têm estoque > 0 na lista unificada
+                foreach (var calcado in lc.Where(c => c.quant > 0))
                 {
-                    item.quant -= quantidadeVendida; // Abate a quantidade do estoque.
-                    lc[index] = item; // Atualiza o item na lista com a nova quantidade.
-
-                    // Adiciona um registro na lista de vendas.
-                    lv.Add(new Venda(item.nome, "Calçado", quantidadeVendida, item.preco, DateTime.Now.ToString("dd/MM/yyyy"), u.Username));
-
-                    SalvarCalcados(lc); // Salva a lista de calçados atualizada.
-                    SalvarVendas(lv); // Salva a lista de vendas atualizada.
-
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine("\nVenda realizada com sucesso!");
-                    Console.ResetColor();
+                    itensParaVenda.Add((contadorId++, calcado.nome, "Calçado", calcado.preco, calcado.quant));
                 }
-                else
+
+                // Adiciona os acessórios que têm estoque > 0 na lista unificada
+                foreach (var acessorio in la.Where(a => a.quant > 0))
                 {
-                    // Mensagem de erro se a quantidade for inválida ou o estoque insuficiente.
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"\nQuantidade inválida ou insuficiente! Estoque: {item.quant}");
-                    Console.ResetColor();
+                    itensParaVenda.Add((contadorId++, acessorio.nome, "Acessório", acessorio.preco, acessorio.quant));
                 }
-            }
-            else
-            {
-                // Mensagem de erro se o produto não for encontrado.
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("\nProduto não encontrado!");
-                Console.ResetColor();
-            }
-            AguardarEnter();
-        }
 
-        // Lógica para realizar a venda de um acessório (idêntica à de calçado).
-        static void RealizarVendaAcessorio(List<Acessorio> la, List<Venda> lv, Usuario u)
-        {
-            ImprimirCabecalho("VENDA DE ACESSÓRIO");
-            string n = LerString("Nome do acessório:");
-            int i = la.FindIndex(a => a.nome.Equals(n, StringComparison.OrdinalIgnoreCase));
-            if (i != -1)
-            {
-                int q = LerInteiro("Quantidade:");
-                var item = la[i];
-                if (q > 0 && item.quant >= q)
+                // Se não houver nenhum item com estoque, informa o usuário e sai do menu de venda.
+                if (!itensParaVenda.Any())
                 {
-                    item.quant -= q;
-                    la[i] = item;
-                    lv.Add(new Venda(item.nome, "Acessório", q, item.preco, DateTime.Now.ToString("dd/MM/yyyy"), u.Username));
-                    SalvarAcessorios(la);
-                    SalvarVendas(lv);
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine("\nVenda realizada com sucesso!");
-                    Console.ResetColor();
+                    Console.WriteLine("Nenhum produto com estoque disponível para venda.");
+                    AguardarEnter();
+                    return; // Retorna ao menu principal
                 }
-                else
+
+                // 2. EXIBE A LISTA DE PRODUTOS PARA O USUÁRIO
+                Console.WriteLine($"{"ID",-5} {"NOME",-30} {"PREÇO",-15} {"ESTOQUE",-10}");
+                Console.WriteLine(new string('-', 65)); // Linha separadora
+                foreach (var item in itensParaVenda)
+                {
+                    Console.WriteLine($"{item.id,-5} {item.nome,-30} {$"R$ {item.preco:N2}",-15} {item.quant,-10}");
+                }
+                Console.WriteLine(new string('-', 65));
+                Console.WriteLine("\n[0] Voltar ao Menu Principal");
+
+                // 3. OBTÉM A ESCOLHA DO USUÁRIO
+                int escolhaId = LerInteiro("Escolha o item pelo ID:");
+
+                // Se a escolha for 0, quebra o loop e volta ao menu principal.
+                if (escolhaId == 0)
+                {
+                    break;
+                }
+
+                // Procura o item escolhido na lista unificada.
+                var itemEscolhido = itensParaVenda.FirstOrDefault(item => item.id == escolhaId);
+
+                // Se o ID for inválido, mostra um erro e o loop recomeça.
+                if (itemEscolhido == default)
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"\nQuantidade inválida ou insuficiente! Estoque: {item.quant}");
+                    Console.WriteLine("\nID de produto inválido!");
                     Console.ResetColor();
+                    AguardarEnter();
+                    continue; // Pula para a próxima iteração do loop
                 }
-            }
-            else
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("\nProduto não encontrado!");
+
+                // 4. PROCESSA A VENDA DO ITEM ESCOLHIDO
+                Console.WriteLine($"\nProduto selecionado: {itemEscolhido.nome}");
+                int quantidadeVendida = LerInteiro("Quantidade a vender:");
+
+                // Valida se a quantidade é positiva e se há estoque suficiente
+                if (quantidadeVendida <= 0 || quantidadeVendida > itemEscolhido.quant)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine($"\nQuantidade inválida ou insuficiente! Estoque disponível: {itemEscolhido.quant}");
+                    Console.ResetColor();
+                    AguardarEnter();
+                    continue; // Pula para a próxima iteração
+                }
+
+                // Atualiza o estoque na lista original correspondente (Calçados ou Acessórios)
+                if (itemEscolhido.tipo == "Calçado")
+                {
+                    int index = lc.FindIndex(c => c.nome == itemEscolhido.nome);
+                    if (index != -1)
+                    {
+                        var calcado = lc[index];
+                        calcado.quant -= quantidadeVendida;
+                        lc[index] = calcado;
+                        lv.Add(new Venda(calcado.nome, "Calçado", quantidadeVendida, calcado.preco, DateTime.Now.ToString("dd/MM/yyyy"), u.Username));
+                        SalvarCalcados(lc); // Salva a alteração no arquivo
+                    }
+                }
+                else if (itemEscolhido.tipo == "Acessório")
+                {
+                    int index = la.FindIndex(a => a.nome == itemEscolhido.nome);
+                    if (index != -1)
+                    {
+                        var acessorio = la[index];
+                        acessorio.quant -= quantidadeVendida;
+                        la[index] = acessorio;
+                        lv.Add(new Venda(acessorio.nome, "Acessório", quantidadeVendida, acessorio.preco, DateTime.Now.ToString("dd/MM/yyyy"), u.Username));
+                        SalvarAcessorios(la); // Salva a alteração no arquivo
+                    }
+                }
+
+                SalvarVendas(lv); // Salva o novo registro de venda
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine("\nVenda realizada com sucesso!");
                 Console.ResetColor();
+                AguardarEnter();
             }
-            AguardarEnter();
         }
 
         // Permite a edição dos dados de um calçado existente.
