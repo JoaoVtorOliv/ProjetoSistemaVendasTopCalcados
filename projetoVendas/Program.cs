@@ -265,7 +265,7 @@ namespace Listacomstruct
             // Usa LINQ para processar o arquivo.
             return File.ReadAllLines(arquivocalcados) // 1. Lê todas as linhas do arquivo.
                 .Where(linha => !string.IsNullOrWhiteSpace(linha)) // 2. Filtra linhas em branco ou nulas.
-                .Select(linha => linha.Split(';')) // 3. Divide cada linha pelo delimitador ';' para obter os campos.
+                .Select(linha => linha.Split(';')) // 3. Divide cada lintador ';' para obter os campos.ha pelo delimi
                 .Select(partes => new Calcado(partes[0], partes[1], int.Parse(partes[2]), int.Parse(partes[3]), float.Parse(partes[4]))) // 4. Cria um objeto Calcado com os dados, convertendo os tipos.
                 .ToList(); // 5. Converte o resultado em uma lista.
         }
@@ -529,7 +529,7 @@ namespace Listacomstruct
                         var calcado = lc[index];
                         calcado.quant -= quantidadeVendida;
                         lc[index] = calcado;
-                        lv.Add(new Venda(calcado.nome, "Calçado", quantidadeVendida, calcado.preco, DateTime.Now.ToString("dd/MM/yyyy"), u.Username));
+                        lv.Add(new Venda(calcado.nome, "Calçado", quantidadeVendida, calcado.preco, DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss"), u.Username));
                         SalvarCalcados(lc); // Salva a alteração no arquivo
                     }
                 }
