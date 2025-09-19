@@ -7,9 +7,6 @@ namespace Listacomstruct
 {
     internal class Program
     {
-        // ===================================================================
-        // VARIÁVEIS GLOBAIS E ESTÁTICAS
-        // ===================================================================
         // Define os caminhos dos arquivos de dados. 
         // São 'static' para que possam ser acessados de qualquer método da classe sem precisar de uma instância.
         static string arquivocalcados = @"C:\Users\joaov\OneDrive\Documentos\pastaProjeto\softwareVendas\estoquecalcados.txt";
@@ -17,9 +14,9 @@ namespace Listacomstruct
         static string arquivovendas = @"C:\Users\joaov\OneDrive\Documentos\pastaProjeto\softwareVendas\registrodevendas.txt";
         static string arquivousuarios = @"C:\Users\joaov\OneDrive\Documentos\pastaProjeto\softwareVendas\usuarios.txt";
 
-        // ===================================================================
+
         // STRUCTS (Estruturas de Dados)
-        // ===================================================================
+
 
         // Define a estrutura para armazenar dados de um calçado.
         public struct Calcado
@@ -134,9 +131,7 @@ namespace Listacomstruct
             public override string ToString() => $"{"Username:",-15} {Username}\n{"Função:",-15} {Role}\n----------------------------------\n";
         }
 
-        // ===================================================================
         // FUNÇÕES AUXILIARES DE INTERFACE (UI)
-        // ===================================================================
 
         // Limpa a tela e imprime um cabeçalho padronizado e estilizado.
         static void ImprimirCabecalho(string titulo)
@@ -249,10 +244,8 @@ namespace Listacomstruct
             Console.WriteLine();
             return senha;
         }
-
-        // ===================================================================
+    
         // FUNÇÕES DE GERENCIAMENTO DE ARQUIVOS (Leitura e Escrita)
-        // ===================================================================
 
         // Carrega a lista de calçados a partir do arquivo de texto.
         static List<Calcado> CarregarCalcados()
@@ -356,9 +349,7 @@ namespace Listacomstruct
             File.WriteAllLines(arquivousuarios, linhas);
         }
 
-        // ===================================================================
         // MENUS DE ESCOLHA DE CATEGORIA
-        // ===================================================================
         // Estes menus servem para direcionar o fluxo, perguntando ao usuário qual tipo de produto ele quer manipular.
 
         // Menu para escolher se quer cadastrar um calçado ou um acessório.
@@ -392,10 +383,7 @@ namespace Listacomstruct
             else if (op == "2") ConsultarExcluirAcessorio(la);
         }
 
-        // ===================================================================
         // FUNÇÕES PRINCIPAIS DO SISTEMA (CRUD - Create, Read, Update, Delete)
-        // ===================================================================
-
         // Pede os dados, cria um novo calçado, adiciona à lista e salva no arquivo.
         static void CadastrarCalcado(List<Calcado> l)
         {
@@ -422,27 +410,91 @@ namespace Listacomstruct
         }
 
         // Exibe todos os produtos em estoque, separados por categoria.
-        static void ImprimirEstoque(List<Calcado> lc, List<Acessorio> la)
+        // NOVA FUNÇÃO DE RELATÓRIO DE ESTOQUE (Formato de Tabela)
+        static void ImprimirRelatorioEstoque(List<Calcado> lc, List<Acessorio> la)
         {
-            ImprimirCabecalho("RELAÇÃO DE PRODUTOS NO ESTOQUE");
-            Console.WriteLine("--- CALÇADOS ---");
-            // Verifica se a lista não está vazia antes de tentar iterar sobre ela.
-            if (lc.Any())
-                foreach (var item in lc) Console.Write(item); // Usa o método ToString() de cada item.
-            else
-                Console.WriteLine("Estoque de calçados vazio.\n");
+            ImprimirCabecalho("RELAÇÃO DE ESTOQUE");
 
-            Console.WriteLine("\n--- ACESSÓRIOS ---");
-            if (la.Any())
-                foreach (var item in la) Console.Write(item);
+            // --- SEÇÃO DE CALÇADOS ---
+            // Define a largura de cada coluna para alinhamento
+            int colNomeCalcado = 25;
+            int colMarca = 15;
+            int colTamanho = 10;
+            int colQuantCalcado = 15;
+            int colPrecoCalcado = 20;
+            // Calcula a largura total da tabela de calçados para as bordas
+            int larguraTotalCalcados = colNomeCalcado + colMarca + colTamanho + colQuantCalcado + colPrecoCalcado + 16;
+
+            // <-- Linha agora é dinâmica e fecha corretamente
+            string tituloCalcados = "--- [ CALÇADOS ] ";
+            Console.WriteLine(tituloCalcados + new string('-', larguraTotalCalcados - tituloCalcados.Length));
+
+            // Imprime o cabeçalho da tabela de calçados
+            Console.WriteLine($"| {"NOME".PadRight(colNomeCalcado)} | {"MARCA".PadRight(colMarca)} | {"TAMANHO".PadRight(colTamanho)} | {"QUANTIDADE".PadRight(colQuantCalcado)} | {"PREÇO UNITÁRIO".PadRight(colPrecoCalcado)} |");
+            // <-- Adicionado "|" final para fechar a linha
+            Console.WriteLine($"|{new string('-', colNomeCalcado + 2)}|{new string('-', colMarca + 2)}|{new string('-', colTamanho + 2)}|{new string('-', colQuantCalcado + 2)}|{new string('-', colPrecoCalcado + 2)}|");
+
+            if (lc.Any())
+            {
+                foreach (var c in lc)
+                {
+                    string nome = c.nome.Length > colNomeCalcado ? c.nome.Substring(0, colNomeCalcado) : c.nome.PadRight(colNomeCalcado);
+                    string marca = c.marca.Length > colMarca ? c.marca.Substring(0, colMarca) : c.marca.PadRight(colMarca);
+                    string tamanho = c.tamanho.ToString().PadRight(colTamanho);
+                    string quant = $"{c.quant} un.".PadRight(colQuantCalcado);
+                    string preco = $"R$ {c.preco:N2}".PadRight(colPrecoCalcado);
+
+                    Console.WriteLine($"| {nome} | {marca} | {tamanho} | {quant} | {preco} |");
+                }
+            }
             else
-                Console.WriteLine("Estoque de acessórios vazio.\n");
+            {
+                Console.WriteLine($"| {"Nenhum calçado em estoque.".PadRight(larguraTotalCalcados - 4)} |");
+            }
+            Console.WriteLine($"+{new string('-', colNomeCalcado + 2)}+{new string('-', colMarca + 2)}+{new string('-', colTamanho + 2)}+{new string('-', colQuantCalcado + 2)}+{new string('-', colPrecoCalcado + 2)}+");
+
+
+            // --- SEÇÃO DE ACESSÓRIOS ---
+            // Define a largura das colunas para acessórios
+            int colNomeAcessorio = 25;
+            int colTipo = 25;
+            int colQuantAcessorio = 15;
+            int colPrecoAcessorio = 20;
+            // Calcula a largura total da tabela de acessórios
+            int larguraTotalAcessorios = colNomeAcessorio + colTipo + colQuantAcessorio + colPrecoAcessorio + 13;
+
+            // <--  Linha agora é dinâmica e fecha corretamente
+            string tituloAcessorios = "--- [ ACESSÓRIOS ] ";
+            Console.WriteLine("\n" + tituloAcessorios + new string('-', larguraTotalAcessorios - tituloAcessorios.Length));
+
+            // Imprime o cabeçalho da tabela de acessórios
+            Console.WriteLine($"| {"NOME".PadRight(colNomeAcessorio)} | {"TIPO".PadRight(colTipo)} | {"QUANTIDADE".PadRight(colQuantAcessorio)} | {"PREÇO UNITÁRIO".PadRight(colPrecoAcessorio)} |");
+            // <-- Adicionado "|" final para fechar a linha
+            Console.WriteLine($"|{new string('-', colNomeAcessorio + 2)}|{new string('-', colTipo + 2)}|{new string('-', colQuantAcessorio + 2)}|{new string('-', colPrecoAcessorio + 2)}|");
+
+            if (la.Any())
+            {
+                foreach (var a in la)
+                {
+                    string nome = a.nome.Length > colNomeAcessorio ? a.nome.Substring(0, colNomeAcessorio) : a.nome.PadRight(colNomeAcessorio);
+                    string tipo = a.tipo.Length > colTipo ? a.tipo.Substring(0, colTipo) : a.tipo.PadRight(colTipo);
+                    string quant = $"{a.quant} un.".PadRight(colQuantAcessorio);
+                    string preco = $"R$ {a.preco:N2}".PadRight(colPrecoAcessorio);
+
+                    Console.WriteLine($"| {nome} | {tipo} | {quant} | {preco} |");
+                }
+            }
+            else
+            {
+                Console.WriteLine($"| {"Nenhum acessório em estoque.".PadRight(larguraTotalAcessorios - 4)} |");
+            }
+            Console.WriteLine($"+{new string('-', colNomeAcessorio + 2)}+{new string('-', colTipo + 2)}+{new string('-', colQuantAcessorio + 2)}+{new string('-', colPrecoAcessorio + 2)}+");
+
             AguardarEnter();
         }
-
-        // ===================================================================
-        // NOVA FUNÇÃO DE VENDA (Substitui a MenuVenda antiga)
-        // ===================================================================
+S
+        //                    FUNÇÃO DE VENDA
+    
         static void MenuVenda(List<Calcado> lc, List<Acessorio> la, List<Venda> lv, Usuario u)
         {
             // O loop continua para que o vendedor possa realizar múltiplas vendas sem voltar ao menu principal.
@@ -830,9 +882,8 @@ namespace Listacomstruct
             return null;
         }
 
-        // ===================================================================
         // MÉTODO MAIN (Ponto de Entrada do Programa)
-        // ===================================================================
+       
         static void Main(string[] args)
         {
             Console.Title = "Top Calçados - Sistema de Gestão"; // Define o título da janela do console.
@@ -880,7 +931,7 @@ namespace Listacomstruct
                         case "2": MenuVenda(listaDeCalcados, listaDeAcessorios, listaDeVendas, usuarioLogado.Value); break;
                         case "3": MenuEdicao(listaDeCalcados, listaDeAcessorios); break;
                         case "4": MenuConsultaExclusao(listaDeCalcados, listaDeAcessorios); break;
-                        case "5": ImprimirEstoque(listaDeCalcados, listaDeAcessorios); break;
+                        case "5": ImprimirRelatorioEstoque(listaDeCalcados, listaDeAcessorios); break;
                         case "6": ImprimirRelatorioVendas(listaDeVendas); break;
                         case "7":
                             // Segurança: Mesmo que um não-admin digite '7', esta verificação impede o acesso.
